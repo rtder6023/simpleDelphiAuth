@@ -1,0 +1,110 @@
+﻿unit Unit3;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.MySQL,
+  FireDAC.Phys.MySQLDef, FireDAC.VCLUI.Wait, FireDAC.Stan.Param, FireDAC.DatS,
+  FireDAC.DApt.Intf, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client, Vcl.StdCtrls, Vcl.ExtCtrls, Unit1;
+
+type
+  TForm3 = class(TForm)
+    Panel1: TPanel;
+    btnLogin: TButton;
+    btnSign: TButton;
+    edtId: TEdit;
+    edtPW: TEdit;
+    FDConnection1: TFDConnection;
+    FDQuery1: TFDQuery;
+    check: TLabel;
+    authCom: TLabel;
+    procedure FormCreate(Sender: TObject);
+    procedure btnLoginClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnSignClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form3: TForm3;
+  signUp: TForm1;
+implementation
+
+{$R *.dfm}
+
+procedure TForm3.btnLoginClick(Sender: TObject);
+begin
+  if edtId.Text = '' then
+  begin
+    ShowMessage('아이디가 비어있습니다.');
+    edtId.SetFocus;
+    Exit;
+  end
+  else
+  if edtPW.Text = '' then
+  begin
+    ShowMessage('비밀번호가 비어있습니다.');
+    edtPW.SetFocus;
+    Exit;
+  end;
+
+  FDQuery1.SQL.Text := 'SELECT * FROM auth WHERE loginId= :loginId AND pw = :pw';
+  FDQuery1.ParamByName('loginId').AsString := edtId.Text;
+  FDQuery1.ParamByName('pw').AsString := edtPW.Text;
+  FDQuery1.Open;
+
+  if FDQuery1.IsEmpty then
+  begin
+    ShowMessage('해당하는 계정이 존재하지 않습니다.');
+    edtId.Clear;
+    edtPW.Clear;
+    edtId.SetFocus;
+  end
+  else
+  begin
+    authCom.Caption := '로그인되었습니다';
+    check.Caption := FDQuery1.FieldByName('display_name').AsString;
+  end;
+end;
+
+procedure TForm3.btnSignClick(Sender: TObject);
+begin
+    signUp := TForm1.Create(Application);
+    Hide;
+    if signUp.ShowModal = mrOK then
+    begin
+      Show;
+    end
+    else
+      TForm1.Free;
+
+end;
+
+procedure TForm3.FormCreate(Sender: TObject);
+begin
+  FDConnection1.Params.Clear;
+  FDConnection1.DriverName := 'MySQL';
+  FDConnection1.Params.Add('Server=localhost');
+  FDConnection1.Params.Add('CharacterSet=utf8');
+  FDConnection1.Params.Add('Database=conbetra');
+  FDConnection1.Params.Add('User_Name=conbetra_root');
+  FDConnection1.Params.Add('Password=1234');
+end;
+
+procedure TForm3.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+if Key = VK_ESCAPE then Close;
+if Key = VK_RETURN then btnLogin.Click;
+if Key = VK_UP then edtId.SetFocus;
+if Key = VK_DOWN then edtPW.SetFocus;
+end;
+
+end.
